@@ -1,17 +1,5 @@
 <?php
 
-// 0,9 -> 5,9
-// 8,0 -> 0,8
-// 9,4 -> 3,4
-// 2,2 -> 2,1
-// 7,0 -> 7,4
-// 6,4 -> 2,0
-// 0,9 -> 2,9
-// 3,4 -> 1,4
-// 0,0 -> 8,8
-// 5,5 -> 8,2
-
-
 
 // Filter out all the non-square lines, leaving
 // only horizontal and vertical lines
@@ -29,6 +17,11 @@ function takeOnlySquareLines($lines) {
     }
 
     return $squareLines;
+}
+
+// Checks to see if the line is vertical or horizontal
+function lineIsSquare($startPoint, $endPoint) {
+    return $startPoint[0] == $endPoint[0] || $startPoint[1] == $endPoint[1];
 }
 
 // Find the biggest y value.
@@ -129,23 +122,43 @@ function drawSquareLineOnBoard($board, $startPoint, $endPoint) {
 function drawDiagonalLineOnBoard($board, $startPoint, $endPoint) {
     // Diagonal will always be on a 45-degree angle
 
-    if ($startPoint[0] < $endPoint[0]) {
-        // Line is moving rightward
-        if ($startPoint[1] < $endPoint[1]) {
-            // and downward
+    // Mark initial spot before moving cursor
+    $board[$startPoint[1]][$startPoint[0]] += 1;
+
+    $cursor = $startPoint;
+
+    while ($cursor != $endPoint) {
+
+        // Increment cursor
+        if ($startPoint[0] < $endPoint[0]) {
+            // Line is moving rightward
+            if ($startPoint[1] < $endPoint[1]) {
+                // and downward
+                $cursor[0] += 1;
+                $cursor[1] += 1;
+            } else {
+                // and upward
+                $cursor[0] += 1;
+                $cursor[1] -= 1;
+            }
         } else {
-            // and upward
+            // Line is moving leftward
+            if ($startPoint[1] < $endPoint[1]) {
+                // and downward
+                $cursor[0] -= 1;
+                $cursor[1] += 1;
+            } else {
+                // and upward
+                $cursor[0] -= 1;
+                $cursor[1] -= 1;
+            }
         }
-    } else {
-        // Line is moving leftward
-        if ($startPoint[1] < $endPoint[1]) {
-            // and downward
-        } else {
-            // and upward
-        }
+
+        // Mark the board with the cursor point
+        $board[$cursor[1]][$cursor[0]] += 1;
+
+        // var_dump($board);
     }
-
-
 
     return $board;
 }
@@ -186,10 +199,28 @@ fclose($file);
 
 
 $board = initializeBoard(discoverGridWidth($lines), discoverGridHeight($lines));
-$squareLines = takeOnlySquareLines($lines); // i.e., no diagonals
 
-foreach ($squareLines as $squareLine) {
-    $board = drawSquareLineOnBoard($board, $squareLine[0], $squareLine[1]);
+// $squareLines = takeOnlySquareLines($lines); // i.e., no diagonals
+//
+// foreach ($squareLines as $squareLine) {
+//     $board = drawSquareLineOnBoard($board, $squareLine[0], $squareLine[1]);
+// }
+
+foreach ($lines as $line) {
+    $startPoint = $line[0];
+    $endPoint = $line[1];
+
+    if (lineIsSquare($startPoint, $endPoint)) {
+        $board = drawSquareLineOnBoard($board, $startPoint, $endPoint);
+    } else {
+        $board = drawDiagonalLineOnBoard($board, $startPoint, $endPoint);
+    }
 }
 
+// var_dump($board);
+
 echo countOverlappingPoints($board) . "\n";
+
+// $board = initializeBoard(5, 5);
+
+// drawDiagonalLineOnBoard($board, [0,0], [2,2]);
